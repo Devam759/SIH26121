@@ -69,10 +69,10 @@ export default function DashboardPage() {
   return (
     <div className="flex-1 p-4 md:p-6 flex flex-col gap-4 max-w-[1600px] w-full mx-auto">
       {/* Top Controls Ribbon */}
-      <div className="bg-slate-900/90 border border-slate-800 rounded-lg p-3 flex flex-wrap items-center justify-between gap-4 shadow-sm">
+      <div className="bg-[#161B22]/95 border border-[#2E3642] rounded-lg p-3 flex flex-wrap items-center justify-between gap-4 shadow-md">
         {/* Well & Location Indicator */}
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded bg-sky-950 border border-sky-800/80 text-sky-400">
+          <div className="p-2 rounded bg-[#3A0B10] border border-[#8E1218] text-[#ED1C24]">
             <MapPin className="w-4 h-4" />
           </div>
           <div>
@@ -83,7 +83,7 @@ export default function DashboardPage() {
                 const selected = wells.find((w: Well) => w.id === e.target.value);
                 if (selected) setActiveWell(selected);
               }}
-              className="bg-slate-800 border border-slate-700 text-xs font-bold text-slate-100 rounded px-2 py-1 focus:outline-none focus:border-sky-500"
+              className="bg-[#1D232C] border border-[#2E3642] text-xs font-bold text-slate-100 rounded px-2.5 py-1 focus:outline-none focus:border-[#ED1C24]"
             >
               {wells.map((w: Well) => (
                 <option key={w.id} value={w.id}>
@@ -95,11 +95,11 @@ export default function DashboardPage() {
         </div>
 
         {/* Radius Filter Slider */}
-        <div className="flex items-center gap-3 bg-slate-800/50 px-3 py-1.5 rounded border border-slate-700/50">
-          <Sliders className="w-3.5 h-3.5 text-slate-400" />
+        <div className="flex items-center gap-3 bg-[#1D232C] px-3 py-1.5 rounded border border-[#2E3642]">
+          <Sliders className="w-3.5 h-3.5 text-amber-400" />
           <div className="text-xs">
-            <span className="text-slate-400 mr-2">Radius:</span>
-            <span className="font-bold text-sky-400">{radiusKm} km</span>
+            <span className="text-slate-400 mr-2">Search Radius:</span>
+            <span className="font-bold text-amber-400">{radiusKm} km</span>
           </div>
           <div className="flex gap-1">
             {[5, 10, 15, 25].map((r) => (
@@ -108,8 +108,8 @@ export default function DashboardPage() {
                 onClick={() => setRadiusKm(r)}
                 className={`text-[11px] px-2 py-0.5 rounded transition-colors ${
                   radiusKm === r
-                    ? 'bg-sky-600 text-white font-semibold'
-                    : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                    ? 'bg-[#ED1C24] text-white font-bold shadow-sm'
+                    : 'bg-[#161B22] text-slate-400 hover:bg-[#252C37]'
                 }`}
               >
                 {r}k
@@ -122,10 +122,10 @@ export default function DashboardPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setIsSimulating(!isSimulating)}
-            className={`flex items-center gap-1 text-xs px-3 py-1.5 rounded font-semibold transition-colors ${
+            className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded font-bold transition-colors ${
               isSimulating
-                ? 'bg-amber-600/90 hover:bg-amber-500 text-slate-950'
-                : 'bg-emerald-600/90 hover:bg-emerald-500 text-white'
+                ? 'bg-amber-600/90 hover:bg-amber-500 text-slate-950 shadow-sm'
+                : 'bg-emerald-600/90 hover:bg-emerald-500 text-white shadow-sm'
             }`}
           >
             {isSimulating ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
@@ -135,27 +135,27 @@ export default function DashboardPage() {
           <button
             onClick={() => setSimStartDepth(2700)}
             title="Reset to 2,700m (Barail trigger zone)"
-            className="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition-colors border border-slate-700"
+            className="p-1.5 rounded bg-[#1D232C] hover:bg-[#252C37] text-slate-400 hover:text-slate-200 transition-colors border border-[#2E3642]"
           >
             <RotateCcw className="w-3.5 h-3.5" />
           </button>
 
           <button
             onClick={() => setIsHazardBriefOpen(true)}
-            className="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 px-3 py-1.5 rounded text-xs font-semibold flex items-center gap-1.5 transition-colors"
+            className="bg-[#1D232C] hover:bg-[#252C37] border border-[#2E3642] text-slate-200 px-3 py-1.5 rounded text-xs font-semibold flex items-center gap-1.5 transition-colors"
           >
             <FileSpreadsheet className="w-3.5 h-3.5 text-amber-400" />
             <span className="hidden sm:inline">Pre-Spud Brief</span>
           </button>
 
           {/* View Mode Switcher */}
-          <div className="border-l border-slate-700 pl-2 ml-1 flex gap-1">
+          <div className="border-l border-[#2E3642] pl-2 ml-1 flex gap-1">
             <button
               onClick={() => setActiveTab('monitor')}
-              className={`text-xs px-3 py-1.5 rounded font-medium transition-colors flex items-center gap-1.5 ${
+              className={`text-xs px-3 py-1.5 rounded font-bold transition-colors flex items-center gap-1.5 ${
                 activeTab === 'monitor'
-                  ? 'bg-sky-600 text-white font-bold'
-                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                  ? 'bg-[#ED1C24] text-white shadow-sm'
+                  : 'bg-[#1D232C] text-slate-400 hover:bg-[#252C37]'
               }`}
             >
               <Database className="w-3.5 h-3.5" />
@@ -163,10 +163,10 @@ export default function DashboardPage() {
             </button>
             <button
               onClick={() => setActiveTab('steward')}
-              className={`text-xs px-3 py-1.5 rounded font-medium transition-colors flex items-center gap-1.5 ${
+              className={`text-xs px-3 py-1.5 rounded font-bold transition-colors flex items-center gap-1.5 ${
                 activeTab === 'steward'
-                  ? 'bg-sky-600 text-white font-bold'
-                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                  ? 'bg-[#ED1C24] text-white shadow-sm'
+                  : 'bg-[#1D232C] text-slate-400 hover:bg-[#252C37]'
               }`}
             >
               <FileText className="w-3.5 h-3.5" />

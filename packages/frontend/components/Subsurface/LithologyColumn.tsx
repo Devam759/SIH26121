@@ -1,6 +1,6 @@
 'use client';
 
-import { Layers, AlertTriangle, ArrowDown } from 'lucide-react';
+import { Layers, AlertTriangle } from 'lucide-react';
 
 interface FormationInterval {
   name: string;
@@ -16,7 +16,7 @@ const ASSAM_STRATA: FormationInterval[] = [
   { name: 'Dhekiajuli', topM: 450, bottomM: 1200, lithology: 'Friable massive sandstones with clay intercalations', hazardRisk: 'LOW', color: 'border-l-yellow-600/60 bg-yellow-950/20' },
   { name: 'Tipam Sandstone', topM: 1200, bottomM: 2100, lithology: 'Massive fluvial sandstones, principal regional reservoir', hazardRisk: 'LOW', color: 'border-l-amber-500/60 bg-amber-900/20' },
   { name: 'Surma / Bokabil', topM: 2100, bottomM: 2600, lithology: 'Siltstone, shale & argillaceous sandstone alternations', hazardRisk: 'MEDIUM', color: 'border-l-orange-500/70 bg-orange-950/25' },
-  { name: 'Barail Formation', topM: 2600, bottomM: 3200, lithology: 'Carbonaceous shale, coals, overpressured sands (Prone to Kicks & Losses)', hazardRisk: 'HIGH', color: 'border-l-red-500 bg-red-950/30' },
+  { name: 'Barail Formation', topM: 2600, bottomM: 3200, lithology: 'Carbonaceous shale, coals, overpressured sands (Prone to Kicks & Losses)', hazardRisk: 'HIGH', color: 'border-l-[#ED1C24] bg-[#3A0B10]/40' },
   { name: 'Kopili Formation', topM: 3200, bottomM: 3800, lithology: 'Splintery marine shales, limestone lenses', hazardRisk: 'MEDIUM', color: 'border-l-purple-500/60 bg-purple-950/20' },
 ];
 
@@ -31,16 +31,16 @@ export default function LithologyColumn({ currentDepth }: LithologyColumnProps) 
   ) || ASSAM_STRATA[ASSAM_STRATA.length - 1];
 
   return (
-    <div className="bg-slate-900/95 border border-slate-800 rounded-lg p-3 shadow-md flex flex-col gap-2.5">
-      <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+    <div className="bg-[#161B22]/95 border border-[#2E3642] rounded-lg p-3 shadow-md flex flex-col gap-2.5">
+      <div className="flex items-center justify-between pb-2 border-b border-[#2E3642]">
         <div className="flex items-center gap-2">
-          <Layers className="w-4 h-4 text-sky-400" />
+          <Layers className="w-4 h-4 text-amber-400" />
           <span className="text-xs font-bold uppercase tracking-wider text-slate-200">
             Assam Basin Stratigraphy
           </span>
         </div>
-        <span className="text-[11px] font-mono text-sky-400 bg-sky-950/80 px-2 py-0.5 rounded border border-sky-800/60">
-          Bit: {currentDepth.toFixed(1)}m
+        <span className="text-[11px] font-mono text-[#ED1C24] bg-[#3A0B10] px-2 py-0.5 rounded border border-[#8E1218] font-bold">
+          Bit Depth: {currentDepth.toFixed(1)}m MD
         </span>
       </div>
 
@@ -54,13 +54,13 @@ export default function LithologyColumn({ currentDepth }: LithologyColumnProps) 
             <div
               key={st.name}
               className={`border-l-4 rounded p-2 text-xs transition-all relative ${st.color} ${
-                isCurrent ? 'ring-1 ring-sky-400 shadow-sm' : 'opacity-85'
+                isCurrent ? 'ring-1 ring-[#ED1C24] shadow-sm' : 'opacity-85'
               }`}
             >
               {/* Bit Depth Marker indicator when in this formation */}
               {isCurrent && (
                 <div className="absolute -left-2 top-1/2 -translate-y-1/2 flex items-center gap-1 z-10">
-                  <div className="w-2.5 h-2.5 bg-sky-400 rounded-full animate-ping" />
+                  <div className="w-2.5 h-2.5 bg-[#ED1C24] rounded-full animate-ping" />
                 </div>
               )}
 
@@ -68,13 +68,13 @@ export default function LithologyColumn({ currentDepth }: LithologyColumnProps) 
                 <div className="flex items-center gap-1.5 font-bold text-slate-100">
                   <span>{st.name}</span>
                   {isCurrent && (
-                    <span className="text-[10px] font-mono px-1.5 py-0.2 bg-sky-600 text-white rounded">
+                    <span className="text-[10px] font-mono px-1.5 py-0.2 bg-[#ED1C24] text-white rounded font-bold">
                       DRILLING HERE
                     </span>
                   )}
                   {isHazard && (
-                    <span className="text-[10px] font-semibold px-1.5 py-0.2 bg-red-950 text-red-300 border border-red-800 rounded flex items-center gap-0.5">
-                      <AlertTriangle className="w-2.5 h-2.5" />
+                    <span className="text-[10px] font-semibold px-1.5 py-0.2 bg-[#3A0B10] text-red-300 border border-[#ED1C24] rounded flex items-center gap-0.5">
+                      <AlertTriangle className="w-2.5 h-2.5 text-[#ED1C24]" />
                       HAZARD
                     </span>
                   )}

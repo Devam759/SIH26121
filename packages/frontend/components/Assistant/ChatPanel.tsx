@@ -81,17 +81,17 @@ export default function ChatPanel({ activeWellId, currentDepth, formation, radiu
   };
 
   return (
-    <div className="bg-slate-900/90 border border-slate-700/60 rounded-lg p-4 flex flex-col h-[560px] shadow-md">
+    <div className="bg-[#161B22]/95 border border-[#2E3642] rounded-lg p-4 flex flex-col h-[560px] shadow-md">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-2.5 mb-2">
+      <div className="flex items-center justify-between border-b border-[#2E3642] pb-2.5 mb-2">
         <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-sky-400" />
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-200">
+          <Sparkles className="w-4 h-4 text-amber-400" />
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-100">
             AI Assistant (RAG Grounded)
           </span>
         </div>
-        <div className="text-[11px] text-slate-400">
-          Gemini 1.5 Flash + text-embedding-004
+        <div className="text-[11px] text-slate-400 font-mono">
+          Gemini 3.6 Flash • Oil India
         </div>
       </div>
 
@@ -101,7 +101,7 @@ export default function ChatPanel({ activeWellId, currentDepth, formation, radiu
           <button
             key={i}
             onClick={() => handleSend(sq)}
-            className="text-[10px] px-2 py-1 rounded bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 border border-slate-700/50 transition-colors text-left"
+            className="text-[10px] px-2.5 py-1 rounded bg-[#1D232C] hover:bg-[#252C37] text-slate-300 border border-[#2E3642] transition-colors text-left"
           >
             "{sq}"
           </button>
@@ -120,8 +120,8 @@ export default function ChatPanel({ activeWellId, currentDepth, formation, radiu
             <div
               className={`p-3 rounded-lg max-w-[90%] ${
                 m.role === 'user'
-                  ? 'bg-sky-600 text-white rounded-br-none'
-                  : 'bg-slate-800 border border-slate-700/70 text-slate-200 rounded-bl-none'
+                  ? 'bg-[#ED1C24] text-white rounded-br-none shadow-sm font-medium'
+                  : 'bg-[#1D232C] border border-[#2E3642] text-slate-200 rounded-bl-none'
               }`}
             >
               <div className="whitespace-pre-wrap leading-relaxed">{m.content}</div>
@@ -173,8 +173,8 @@ export default function ChatPanel({ activeWellId, currentDepth, formation, radiu
         ))}
 
         {loading && (
-          <div className="flex items-center gap-2 text-xs text-sky-400 bg-slate-800/40 p-2 rounded border border-slate-700/30">
-            <Bot className="w-4 h-4 animate-bounce" />
+          <div className="flex items-center gap-2 text-xs text-amber-400 bg-[#1D232C] p-2.5 rounded border border-[#2E3642]">
+            <Bot className="w-4 h-4 animate-bounce text-[#ED1C24]" />
             <span>Consulting offset records & generating grounded answer...</span>
           </div>
         )}
@@ -186,19 +186,19 @@ export default function ChatPanel({ activeWellId, currentDepth, formation, radiu
           e.preventDefault();
           handleSend();
         }}
-        className="flex gap-2 mt-2 pt-2 border-t border-slate-800"
+        className="flex gap-2 mt-2 pt-2 border-t border-[#2E3642]"
       >
         <input
           type="text"
           value={input}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInput(e.target.value)}
           placeholder="Ask about offset wells, formations, or mitigations..."
-          className="flex-1 bg-slate-800 border border-slate-700 rounded px-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500 transition-colors"
+          className="flex-1 bg-[#1D232C] border border-[#2E3642] rounded px-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-[#ED1C24] transition-colors"
         />
         <button
           type="submit"
           disabled={loading || !input.trim()}
-          className="bg-sky-600 hover:bg-sky-500 disabled:opacity-50 text-white px-3 py-2 rounded text-xs font-semibold flex items-center gap-1 transition-colors"
+          className="bg-[#ED1C24] hover:bg-[#D31E2A] disabled:opacity-50 text-white px-3.5 py-2 rounded text-xs font-bold flex items-center gap-1.5 transition-colors shadow-sm"
         >
           <Send className="w-3.5 h-3.5" />
           <span>Ask</span>

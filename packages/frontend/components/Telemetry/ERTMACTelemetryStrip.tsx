@@ -25,11 +25,11 @@ export default function ERTMACTelemetryStrip({
   const isAnomaly = telemetry?.status === 'ANOMALY_DETECTED' || gas > 100 || torque > 22;
 
   return (
-    <div className="bg-slate-900/95 border border-slate-800 rounded-lg p-3 shadow-md">
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-2.5 pb-2 border-b border-slate-800/80">
+    <div className="bg-[#161B22]/95 border border-[#2E3642] rounded-lg p-3 shadow-md">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-2.5 pb-2 border-b border-[#2E3642]">
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-sky-950/80 border border-sky-800/70 text-[11px] font-bold text-sky-300">
-            <Radio className="w-3 h-3 text-sky-400 animate-pulse" />
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#3A0B10] border border-[#8E1218] text-[11px] font-bold text-[#ED1C24]">
+            <Radio className="w-3 h-3 text-[#ED1C24] animate-pulse" />
             <span>eRTMAC WITSML TELEMETRY</span>
           </div>
           <span className="text-[11px] text-slate-400 hidden sm:inline">
@@ -39,8 +39,8 @@ export default function ERTMACTelemetryStrip({
 
         <div className="flex items-center gap-2 text-xs">
           {isAnomaly ? (
-            <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-red-950/80 border border-red-800 text-red-300 font-bold animate-pulse text-[11px]">
-              <AlertTriangle className="w-3.5 h-3.5 text-red-400" />
+            <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-[#3A0B10] border border-[#ED1C24] text-red-200 font-bold animate-pulse text-[11px]">
+              <AlertTriangle className="w-3.5 h-3.5 text-[#ED1C24]" />
               <span>SENSOR ANOMALY (GAS / TORQUE SPIKE)</span>
             </div>
           ) : (
@@ -55,10 +55,10 @@ export default function ERTMACTelemetryStrip({
       {/* Grid of 6 Drilling Sensor Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
         {/* ROP */}
-        <div className="bg-slate-950/70 border border-slate-800 rounded p-2 flex flex-col justify-between">
+        <div className="bg-[#0F1216] border border-[#2E3642] rounded p-2 flex flex-col justify-between">
           <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1">
             <span className="font-semibold">ROP</span>
-            <Activity className="w-3.5 h-3.5 text-sky-400" />
+            <Activity className="w-3.5 h-3.5 text-amber-400" />
           </div>
           <div className="flex items-baseline gap-1">
             <span className="text-lg font-mono font-bold text-slate-100">{rop.toFixed(1)}</span>
@@ -68,10 +68,10 @@ export default function ERTMACTelemetryStrip({
         </div>
 
         {/* WOB */}
-        <div className="bg-slate-950/70 border border-slate-800 rounded p-2 flex flex-col justify-between">
+        <div className="bg-[#0F1216] border border-[#2E3642] rounded p-2 flex flex-col justify-between">
           <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1">
             <span className="font-semibold">WOB</span>
-            <Gauge className="w-3.5 h-3.5 text-sky-400" />
+            <Gauge className="w-3.5 h-3.5 text-amber-400" />
           </div>
           <div className="flex items-baseline gap-1">
             <span className="text-lg font-mono font-bold text-slate-100">{wob.toFixed(1)}</span>
@@ -81,10 +81,10 @@ export default function ERTMACTelemetryStrip({
         </div>
 
         {/* RPM */}
-        <div className="bg-slate-950/70 border border-slate-800 rounded p-2 flex flex-col justify-between">
+        <div className="bg-[#0F1216] border border-[#2E3642] rounded p-2 flex flex-col justify-between">
           <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1">
             <span className="font-semibold">RPM</span>
-            <Disc className="w-3.5 h-3.5 text-sky-400" />
+            <Disc className="w-3.5 h-3.5 text-amber-400" />
           </div>
           <div className="flex items-baseline gap-1">
             <span className="text-lg font-mono font-bold text-slate-100">{rpm}</span>
@@ -96,12 +96,12 @@ export default function ERTMACTelemetryStrip({
         {/* Torque */}
         <div className={`rounded p-2 flex flex-col justify-between border transition-all ${
           torque > 22
-            ? 'bg-amber-950/40 border-amber-800/80 text-amber-200'
-            : 'bg-slate-950/70 border-slate-800 text-slate-100'
+            ? 'bg-amber-950/40 border-amber-600/80 text-amber-200'
+            : 'bg-[#0F1216] border-[#2E3642] text-slate-100'
         }`}>
           <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1">
             <span className="font-semibold">TORQUE</span>
-            <Zap className={`w-3.5 h-3.5 ${torque > 22 ? 'text-amber-400' : 'text-sky-400'}`} />
+            <Zap className={`w-3.5 h-3.5 ${torque > 22 ? 'text-amber-400' : 'text-slate-400'}`} />
           </div>
           <div className="flex items-baseline gap-1">
             <span className="text-lg font-mono font-bold">{torque.toFixed(1)}</span>
@@ -113,10 +113,10 @@ export default function ERTMACTelemetryStrip({
         </div>
 
         {/* Mud Weight */}
-        <div className="bg-slate-950/70 border border-slate-800 rounded p-2 flex flex-col justify-between">
+        <div className="bg-[#0F1216] border border-[#2E3642] rounded p-2 flex flex-col justify-between">
           <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1">
             <span className="font-semibold">MUD WEIGHT</span>
-            <Droplets className="w-3.5 h-3.5 text-sky-400" />
+            <Droplets className="w-3.5 h-3.5 text-amber-400" />
           </div>
           <div className="flex items-baseline gap-1">
             <span className="text-lg font-mono font-bold text-slate-100">{mudWeight.toFixed(2)}</span>
@@ -128,12 +128,12 @@ export default function ERTMACTelemetryStrip({
         {/* Standpipe Pressure & Gas Units */}
         <div className={`rounded p-2 flex flex-col justify-between border transition-all ${
           gas > 100
-            ? 'bg-red-950/50 border-red-800 text-red-200'
-            : 'bg-slate-950/70 border-slate-800 text-slate-100'
+            ? 'bg-[#3A0B10] border-[#ED1C24] text-red-200'
+            : 'bg-[#0F1216] border-[#2E3642] text-slate-100'
         }`}>
           <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1">
             <span className="font-semibold">TOTAL GAS</span>
-            <AlertTriangle className={`w-3.5 h-3.5 ${gas > 100 ? 'text-red-400 animate-bounce' : 'text-sky-400'}`} />
+            <AlertTriangle className={`w-3.5 h-3.5 ${gas > 100 ? 'text-[#ED1C24] animate-bounce' : 'text-amber-400'}`} />
           </div>
           <div className="flex items-baseline gap-1">
             <span className="text-lg font-mono font-bold">{gas}</span>
