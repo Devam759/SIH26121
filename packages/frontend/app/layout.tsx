@@ -1,65 +1,73 @@
 import './globals.css';
 import type { Metadata } from 'next';
-import { AlertOctagon, Flame, Shield } from 'lucide-react';
+import { Suspense } from 'react';
+import { Inter, JetBrains_Mono } from 'next/font/google';
+import SideRail from '../components/Shell/SideRail';
+import TopBar from '../components/Shell/TopBar';
+
+const sans = Inter({
+  subsets: ['latin'],
+  variable: '--font-sans',
+  display: 'swap',
+});
+
+const mono = JetBrains_Mono({
+  subsets: ['latin'],
+  variable: '--font-mono',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: 'eRTMAC-NWIS | Oil India Limited | Nearby Wells Intelligence System',
-  description: 'AI-enabled nearby wells intelligence system for drilling operations in Assam/Brahmaputra Basin. SIH 26121 | Oil India Limited (A Maharatna CPSE).',
+  description:
+    'AI-enabled nearby wells intelligence system for drilling operations in Assam/Brahmaputra Basin. SIH 26121 | Oil India Limited (A Maharatna CPSE).',
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="dark">
-      <body className="min-h-screen bg-[#0F1216] text-slate-100 flex flex-col selection:bg-[#ED1C24] selection:text-white">
-        {/* MANDATORY SYNTHETIC DEMO BANNER */}
-        <div className="bg-[#B71622] text-white font-bold px-4 py-1 text-center text-xs tracking-wider uppercase flex items-center justify-center gap-2 shadow-sm border-b border-[#8E1218]">
-          <AlertOctagon className="w-3.5 h-3.5 text-amber-300" />
-          <span>[SYNTHETIC – DEMO DATA] — Fictional Well Data for SIH 2026 Hackathon Demonstration</span>
+    <html lang="en" className={`${sans.variable} ${mono.variable}`}>
+      <body className="min-h-screen bg-bg-deep text-ink font-sans antialiased selection:bg-accent-wash selection:text-ink">
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:absolute focus:z-modal focus:m-3 focus:bg-ink focus:px-3 focus:py-2 focus:text-body focus:font-semibold focus:text-bg-deep"
+        >
+          Skip to content
+        </a>
+
+        <div className="flex min-h-screen">
+          {/* Both read the view out of the URL, so they need a Suspense boundary. */}
+          <Suspense
+            fallback={<div className="hidden lg:block w-60 shrink-0 border-r border-line-soft bg-bg-deep" />}
+          >
+            <SideRail />
+          </Suspense>
+
+          <div className="flex-1 min-w-0 flex flex-col bg-bg">
+            {/*
+              Mandatory synthetic-data disclosure. Framed as a provenance strip
+              rather than a warning banner — it states what the data is, it is
+              not an operational alarm competing with the rig's own alerts.
+            */}
+            <div className="flex items-center gap-2 border-b border-line-soft bg-bg-deep px-4 py-1 text-micro text-ink-3">
+              <span className="led bg-warn" aria-hidden="true" />
+              <span className="hdr text-warn-ink">Synthetic data</span>
+              <span className="text-line" aria-hidden="true">
+                |
+              </span>
+              <span className="truncate">
+                Fictional well records &mdash; SIH 2026 demonstration build
+              </span>
+            </div>
+
+            <Suspense fallback={<div className="h-14 border-b border-line-soft" />}>
+              <TopBar />
+            </Suspense>
+
+            <main id="main" className="flex-1 flex flex-col">
+              {children}
+            </main>
+          </div>
         </div>
-
-        {/* Global Navigation Bar - Oil India Limited Branding */}
-        <header className="bg-[#161B22]/95 backdrop-blur-md border-b border-[#2E3642] px-6 py-2.5 flex items-center justify-between sticky top-0 z-50 shadow-md">
-          <div className="flex items-center gap-3">
-            {/* Oil India Official Emblem Shape with Red Brand Color */}
-            <div className="w-9 h-9 rounded bg-[#ED1C24] flex items-center justify-center font-black text-white text-base shadow-md border border-[#F34D53] tracking-tighter">
-              OIL
-            </div>
-            <div>
-              <div className="text-sm font-black tracking-wide text-white flex items-center gap-2">
-                <span>eRTMAC-NWIS</span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#ED1C24]/20 border border-[#ED1C24]/60 text-[#ED1C24]">
-                  SIH 26121
-                </span>
-                <span className="hidden sm:inline-block text-[10px] font-semibold px-2 py-0.5 rounded bg-amber-500/15 border border-amber-500/50 text-amber-400">
-                  Maharatna CPSE
-                </span>
-              </div>
-              <div className="text-[11px] text-slate-400">
-                ऑयल इंडिया लिमिटेड • Oil India Limited • Assam Basin Operations
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4 text-xs">
-            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#1D232C] border border-[#2E3642] text-slate-300">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Duliajan Ops Hub • Active</span>
-            </div>
-            <div className="text-right">
-              <div className="font-semibold text-slate-200 flex items-center justify-end gap-1">
-                <span>Drilling Operations Console</span>
-              </div>
-              <div className="text-[11px] text-slate-400 font-mono">engineer@oilindia.in</div>
-            </div>
-          </div>
-        </header>
-
-        {/* Main Content Area */}
-        <main className="flex-1 flex flex-col">{children}</main>
       </body>
     </html>
   );

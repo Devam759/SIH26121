@@ -4,48 +4,446 @@
 
 @import 'leaflet/dist/leaflet.css';
 
+/*
+  eRTMAC-NWIS design tokens.
+
+  Industrial control-room language: graphite surfaces, hairline rules, and a
+  single restrained amber that only ever means "operational" — never decoration.
+  Radius is small and consistent; elevation is drawn with borders, not shadow.
+*/
 :root {
-  --foreground-rgb: 243, 244, 246;
-  --background-rgb: 15, 18, 22;
+  color-scheme: dark;
+
+  /* Graphite ramp. Four steps is enough to build every surface in the app.
+     The gap between --bg and --raised is what makes a module read as a module,
+     so it is the one step that has to stay clearly visible. */
+  --bg-deep: oklch(0.128 0.004 250);
+  --bg: oklch(0.152 0.004 250);
+  --raised: oklch(0.196 0.005 250);
+  --surface: oklch(0.245 0.005 250);
+
+  /* Hairlines. --line-soft separates rows, --line separates modules. */
+  --line-soft: oklch(0.294 0.005 250);
+  --line: oklch(0.360 0.006 250);
+
+  /* Text. --ink is off-white, not #fff — pure white on graphite glares. */
+  --ink: oklch(0.955 0.002 250);
+  --ink-2: oklch(0.775 0.005 250);
+  --ink-3: oklch(0.630 0.006 250);
+
+  /* Amber: current selection, active rig, the value being read right now. */
+  --accent: oklch(0.700 0.155 55);
+  --accent-solid: oklch(0.545 0.160 50);
+  --accent-ink: oklch(0.775 0.130 62);
+  --accent-wash: oklch(0.700 0.155 55 / 0.14);
+  --accent-line: oklch(0.700 0.155 55 / 0.42);
+
+  /* Critical — reserved for a reading that is genuinely out of envelope. */
+  --brand: oklch(0.590 0.170 27);
+  --brand-solid: oklch(0.520 0.175 27);
+  --brand-ink: oklch(0.700 0.150 27);
+  --brand-wash: oklch(0.590 0.170 27 / 0.14);
+  --brand-line: oklch(0.590 0.170 27 / 0.40);
+
+  /* Warning */
+  --warn: oklch(0.775 0.125 78);
+  --warn-ink: oklch(0.815 0.115 82);
+  --warn-wash: oklch(0.775 0.125 78 / 0.13);
+  --warn-line: oklch(0.775 0.125 78 / 0.36);
+
+  /* Nominal / healthy — deliberately desaturated so "fine" stays quiet. */
+  --ok: oklch(0.700 0.105 158);
+  --ok-ink: oklch(0.760 0.095 158);
+  --ok-wash: oklch(0.700 0.105 158 / 0.13);
+  --ok-line: oklch(0.700 0.105 158 / 0.34);
+
+  --radius: 3px;
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: rgb(var(--background-rgb));
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: var(--bg-deep);
+  color: var(--ink);
+  font-feature-settings: 'cv11', 'ss01';
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Custom Leaflet Map Dark styling */
+/* Numerals must not jitter as live telemetry updates. */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------------------------
+   Structure. Three levels only — anything needing a fourth is a layout bug.
+   .panel    a bordered module that owns a region of the page
+   .subpanel an embedded region inside a panel (inset ground, no border)
+   .rule     a hairline divider, used instead of nesting another panel
+   --------------------------------------------------------------------------- */
+.panel {
+  background: var(--raised);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+}
+
+.subpanel {
+  background: var(--bg);
+  border-radius: 2px;
+}
+
+.rule {
+  border-color: var(--line-soft);
+}
+
+/* Module header: label left, controls right, hairline underneath. */
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+/* Section label. Sentence case — the heading already says what this is. */
+.panel-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.005em;
+}
+
+/* Metadata under a title: source, freshness, interval, count. */
+.meta {
+  font-size: 0.6875rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Column header / axis label. The only place uppercase is allowed. */
+.hdr {
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+
+/* ---------------------------------------------------------------------------
+   Controls. Square-ish, functional, no gradients and no lift on hover.
+   --------------------------------------------------------------------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.4375rem 0.75rem;
+  border-radius: 2px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-2);
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background-color 0.12s linear, color 0.12s linear, border-color 0.12s linear;
+}
+.btn:hover:not(:disabled) {
+  background: var(--line-soft);
+  color: var(--ink);
+}
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--accent-solid);
+  border-color: var(--accent-solid);
+  color: #fff;
+  font-weight: 600;
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.btn-quiet {
+  background: transparent;
+  border-color: transparent;
+  color: var(--ink-3);
+}
+.btn-quiet:hover:not(:disabled) {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+/* Segmented control — one bordered group with dividers, not a row of pills. */
+.seg {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.seg > button {
+  padding: 0.3125rem 0.6875rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--ink-3);
+  background: transparent;
+  border-left: 1px solid var(--line);
+  transition: background-color 0.12s linear, color 0.12s linear;
+  white-space: nowrap;
+}
+.seg > button:first-child {
+  border-left: 0;
+}
+.seg > button:hover {
+  color: var(--ink);
+}
+.seg > button[aria-pressed='true'],
+.seg > button[data-on='true'] {
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+/* Status tag. Rectangular — a status is a label, not a bubble. */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3125rem;
+  padding: 0.125rem 0.375rem;
+  border-radius: 2px;
+  border: 1px solid transparent;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+.tag-ok {
+  background: var(--ok-wash);
+  border-color: var(--ok-line);
+  color: var(--ok-ink);
+}
+.tag-warn {
+  background: var(--warn-wash);
+  border-color: var(--warn-line);
+  color: var(--warn-ink);
+}
+.tag-crit {
+  background: var(--brand-wash);
+  border-color: var(--brand-line);
+  color: var(--brand-ink);
+}
+.tag-accent {
+  background: var(--accent-wash);
+  border-color: var(--accent-line);
+  color: var(--accent-ink);
+}
+.tag-mute {
+  background: var(--surface);
+  border-color: var(--line);
+  color: var(--ink-3);
+}
+
+/* Instrument readout — the current value of a channel. */
+.readout {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.readout-unit {
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 400;
+  color: var(--ink-3);
+  letter-spacing: 0;
+  margin-left: 0.25rem;
+}
+
+/* Status LED. Small, round and static — a blinking dot is noise on a wall. */
+.led {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+/* ---------------------------------------------------------------------------
+   Motion. State changes only.
+   --------------------------------------------------------------------------- */
+@keyframes settle {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.settle {
+  animation: settle 0.16s linear;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .settle {
+    animation: none;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Leaflet — desaturated technical basemap, no glow.
+   --------------------------------------------------------------------------- */
 .leaflet-container {
   width: 100%;
   height: 100%;
-  background: #0f1216 !important;
-  border-radius: 0.5rem;
+  background: var(--bg-deep) !important;
+  font-family: inherit;
 }
-
+.leaflet-tile-pane {
+  filter: saturate(0) brightness(0.44) contrast(1.15);
+}
 .leaflet-popup-content-wrapper {
-  background: #1e293b !important;
-  color: #f1f5f9 !important;
-  border: 1px solid #334155;
-  border-radius: 0.5rem;
+  background: var(--raised) !important;
+  color: var(--ink) !important;
+  border-radius: 2px;
+  border: 1px solid var(--line);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55);
 }
-
 .leaflet-popup-tip {
-  background: #1e293b !important;
+  background: var(--raised) !important;
+}
+.leaflet-container a.leaflet-popup-close-button {
+  color: var(--ink-3) !important;
+}
+.leaflet-bar {
+  border-radius: 2px !important;
+  overflow: hidden;
+}
+.leaflet-bar a,
+.leaflet-control-attribution {
+  background: var(--raised) !important;
+  color: var(--ink-3) !important;
+  border-color: var(--line) !important;
+  border-radius: 0 !important;
+}
+.leaflet-bar a:hover {
+  background: var(--surface) !important;
+  color: var(--ink) !important;
 }
 
-/* Scrollbar polish */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 9px;
+  height: 9px;
 }
 ::-webkit-scrollbar-track {
-  background: #0f172a;
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #334155;
-  border-radius: 3px;
+  background: var(--line);
+  border: 2px solid transparent;
+  background-clip: content-box;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: var(--ink-3);
+  background-clip: content-box;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent-ink);
+  outline-offset: 1px;
+}
+
+/* Well popup — markup lives in WellMap.tsx, colours stay on the token ramp. */
+.leaflet-popup-content {
+  margin: 0;
+  min-width: 200px;
+}
+.wm-pop {
+  padding: 10px 12px;
+  font-size: 0.75rem;
+}
+.wm-pop-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.wm-pop-name {
+  font-weight: 600;
+  color: var(--ink);
+  font-family: var(--font-mono), ui-monospace, monospace;
+}
+.wm-pop-tag {
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--accent-ink);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.wm-pop-rows {
+  margin-top: 7px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 0.6875rem;
+}
+.wm-pop-rows > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.wm-pop-rows dt {
+  color: var(--ink-3);
+}
+.wm-pop-rows dd {
+  margin: 0;
+  color: var(--ink-2);
+  text-transform: capitalize;
+  font-variant-numeric: tabular-nums;
+}
+
+dialog::backdrop {
+  background: oklch(0 0 0 / 0.72);
+}
+
+/* Depth scrubber — a flat track with a square handle, like a rig console. */
+input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  height: 16px;
+}
+input[type='range']::-webkit-slider-runnable-track {
+  height: 3px;
+  background: var(--surface);
+}
+input[type='range']::-moz-range-track {
+  height: 3px;
+  background: var(--surface);
+}
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 4px;
+  height: 14px;
+  margin-top: -5.5px;
+  background: var(--accent);
+  border-radius: 1px;
+  cursor: ew-resize;
+}
+input[type='range']::-moz-range-thumb {
+  width: 4px;
+  height: 14px;
+  border: 0;
+  background: var(--accent);
+  border-radius: 1px;
+  cursor: ew-resize;
 }
