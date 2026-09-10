@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Well, fetchWellEvents } from '../../lib/api';
-import { X, MapPin, Calendar, Ruler, AlertTriangle, ShieldCheck, FileText } from 'lucide-react';
+import { localEventsForWell } from '../../lib/simulation';
+import { formationAt } from '../../lib/strata';
+import { X, ShieldAlert, CheckCircle2 } from 'lucide-react';
 
 interface WellDetailModalProps {
   well: Well | null;
@@ -12,147 +14,141 @@ interface WellDetailModalProps {
 export default function WellDetailModal({ well, onClose }: WellDetailModalProps) {
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    dialogRef.current?.showModal();
+  }, []);
 
   useEffect(() => {
     if (!well) return;
+    const name = well.name;
     setLoading(true);
     fetchWellEvents(well.id)
-      .then((data) => setEvents(data))
-      .catch((err) => console.error('Failed to load well events:', err))
+      .then((rows) => {
+        // An empty response means either a clean well or no API; the bundled
+        // corpus decides, so the modal never claims a well is incident-free
+        // when its records say otherwise.
+        setEvents(rows.length ? rows : localEventsForWell(name));
+      })
+      .catch(() => setEvents(localEventsForWell(name)))
       .finally(() => setLoading(false));
   }, [well]);
 
   if (!well) return null;
 
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="bg-slate-900 border border-slate-700/80 rounded-xl max-w-2xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-        {/* Header */}
-        <div className="bg-slate-800/80 px-5 py-3.5 border-b border-slate-700/80 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded bg-sky-950 border border-sky-800 text-sky-400">
-              <MapPin className="w-4 h-4" />
-            </div>
-            <div>
-              <div className="text-sm font-bold text-slate-100 flex items-center gap-2">
-                <span>{well.name}</span>
-                <span className={`text-[10px] px-2 py-0.5 rounded font-semibold uppercase ${
-                  well.status === 'active' ? 'bg-emerald-950 text-emerald-300 border border-emerald-800' :
-                  well.status === 'completed' ? 'bg-sky-950 text-sky-300 border border-sky-800' :
-                  'bg-slate-800 text-slate-400'
-                }`}>
-                  {well.status}
-                </span>
-                {well.distance_km !== undefined && (
-                  <span className="text-[10px] text-sky-400 font-mono">
-                    ({well.distance_km} km away)
-                  </span>
-                )}
-              </div>
-              <div className="text-[11px] text-slate-400">
-                API: {well.api_number || 'IN-AS-OIL'} • {well.field || 'Lakwa'} Field, {well.basin || 'Brahmaputra'} Basin
-              </div>
-            </div>
-          </div>
+  const meta = [
+    { label: 'Total depth', value: `${well.total_depth_m} m` },
+    { label: 'Latitude', value: `${Number(well.latitude).toFixed(5)}°N` },
+    { label: 'Longitude', value: `${Number(well.longitude).toFixed(5)}°E` },
+    { label: 'Target stratum', value: formationAt(well.total_depth_m).name },
+  ];
 
+  return (
+    <dialog
+      ref={dialogRef}
+      onClose={onClose}
+      onClick={(e) => {
+        if (e.target === dialogRef.current) onClose();
+      }}
+      className="bg-transparent p-0 w-[calc(100%-2rem)] max-w-2xl max-h-[88vh] backdrop:bg-black/70"
+    >
+      <div className="bg-raised border border-line shadow-overlay overflow-hidden flex flex-col max-h-[88vh] text-left">
+        <header className="panel-head px-4 py-2.5 items-start">
+          <div className="min-w-0">
+            <div className="flex items-baseline gap-2.5">
+              <h2 className="text-title font-semibold text-ink">{well.name}</h2>
+              <span className="tag tag-mute capitalize">
+                {well.status}
+              </span>
+              {well.distance_km !== undefined && (
+                <span className="text-xs text-accent font-mono font-semibold">
+                  {well.distance_km} km offset
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-ink-3 mt-1 truncate">
+              {well.api_number || 'IN-AS-OIL'} &middot; {well.field || 'Lakwa'} Field &middot;{' '}
+              {well.basin || 'Brahmaputra'} Basin
+            </p>
+          </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-1.5 rounded hover:bg-slate-700 text-slate-400 hover:text-slate-100 transition-colors"
+            aria-label="Close"
+            className="btn btn-quiet w-8 h-8 p-0 shrink-0"
           >
             <X className="w-4 h-4" />
           </button>
-        </div>
+        </header>
 
-        {/* Content Body */}
-        <div className="p-5 flex-1 overflow-y-auto flex flex-col gap-4 text-xs">
-          {/* Metadata Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-            <div className="bg-slate-800/50 border border-slate-700/40 rounded p-2.5">
-              <div className="text-[10px] text-slate-400 mb-0.5">Total Depth (TD)</div>
-              <div className="text-sm font-bold font-mono text-slate-200">{well.total_depth_m}m</div>
-            </div>
-            <div className="bg-slate-800/50 border border-slate-700/40 rounded p-2.5">
-              <div className="text-[10px] text-slate-400 mb-0.5">Latitude</div>
-              <div className="text-sm font-bold font-mono text-slate-200">{Number(well.latitude).toFixed(5)}°N</div>
-            </div>
-            <div className="bg-slate-800/50 border border-slate-700/40 rounded p-2.5">
-              <div className="text-[10px] text-slate-400 mb-0.5">Longitude</div>
-              <div className="text-sm font-bold font-mono text-slate-200">{Number(well.longitude).toFixed(5)}°E</div>
-            </div>
-            <div className="bg-slate-800/50 border border-slate-700/40 rounded p-2.5">
-              <div className="text-[10px] text-slate-400 mb-0.5">Target Stratum</div>
-              <div className="text-sm font-bold text-amber-300">Barail / Tipam</div>
-            </div>
+        <div className="flex-1 overflow-y-auto">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-surface/60 border-b border-line-soft">
+            {meta.map((m) => (
+              <div key={m.label} className="bg-raised px-5 py-3.5">
+                <p className="text-label text-ink-3">{m.label}</p>
+                <p className="text-body font-semibold text-ink font-mono mt-0.5">{m.value}</p>
+              </div>
+            ))}
           </div>
 
-          {/* Historical Incidents Section */}
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between pb-1 border-b border-slate-800">
-              <div className="flex items-center gap-1.5 font-bold text-slate-200">
-                <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
-                <span>Historical Drilling Incidents & NPT Records ({events.length})</span>
-              </div>
-              <span className="text-[10px] text-slate-500">Source: Historical Well Completion Reports</span>
+          <div className="px-4 py-2.5 flex items-baseline justify-between gap-4">
+            <h3 className="text-body font-semibold text-ink">Drilling Incidents &amp; NPT Records</h3>
+            <span className="text-xs text-ink-3 font-mono">{events.length} records</span>
+          </div>
+
+          {loading ? (
+            <div className="px-4 pb-4 flex flex-col gap-2.5" aria-busy="true">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="h-14 bg-surface/60" />
+              ))}
             </div>
-
-            {loading ? (
-              <div className="text-center py-6 text-slate-500">Loading incident records...</div>
-            ) : events.length === 0 ? (
-              <div className="text-center py-4 bg-slate-800/30 rounded border border-dashed border-slate-800 text-slate-500">
-                No major NPT or drilling incidents documented for this offset well.
-              </div>
-            ) : (
-              <div className="flex flex-col gap-2">
-                {events.map((ev, idx) => (
-                  <div
-                    key={ev.id || idx}
-                    className="bg-slate-800/60 border border-slate-700/60 rounded-lg p-3 flex flex-col gap-1.5"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 font-bold text-slate-200">
-                        <span className="text-amber-400 font-mono uppercase">
-                          {ev.event_type.replace('_', ' ')}
-                        </span>
-                        <span className={`px-1.5 py-0.2 rounded text-[9px] uppercase font-semibold ${
-                          ev.severity === 'HIGH' ? 'bg-red-950 text-red-300 border border-red-800' :
-                          ev.severity === 'MEDIUM' ? 'bg-amber-950 text-amber-300 border border-amber-800' :
-                          'bg-emerald-950 text-emerald-300 border border-emerald-800'
-                        }`}>
-                          {ev.severity}
-                        </span>
-                      </div>
-                      <span className="font-mono text-slate-400 text-[11px]">
-                        Depth: {ev.depth_start_m}m {ev.depth_end_m ? `– ${ev.depth_end_m}m` : ''}
-                      </span>
-                    </div>
-
-                    <div className="text-slate-300 text-[11px] leading-relaxed">
-                      {ev.description || `Encountered ${ev.event_type.toLowerCase()} in ${ev.formation || 'Barail formation'}.`}
-                    </div>
-
-                    {ev.mitigation && (
-                      <div className="bg-slate-900/80 border border-slate-800 rounded p-2 text-[11px] text-slate-400">
-                        <span className="text-emerald-400 font-semibold">Curing Action Taken: </span>
-                        {ev.mitigation}
-                      </div>
-                    )}
+          ) : events.length === 0 ? (
+            <p className="px-4 pb-4 text-xs text-ink-3 leading-relaxed">
+              No major NPT or drilling incident is documented for this offset well. Its records
+              still contribute to the formation-match factor in the hazard score.
+            </p>
+          ) : (
+            <ul className="border-t border-line-soft">
+              {events.map((ev, idx) => (
+                <li
+                  key={ev.id || idx}
+                  className="px-4 py-2.5 border-b border-line-soft last:border-b-0 hover:bg-surface/40 transition-colors"
+                >
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span
+                      className={`text-xs font-semibold ${
+                        ev.severity === 'HIGH'
+                          ? 'text-brand-ink'
+                          : ev.severity === 'MEDIUM'
+                            ? 'text-warn-ink'
+                            : 'text-ok-ink'
+                      }`}
+                    >
+                      {String(ev.event_type ?? 'EVENT').replace(/_/g, ' ')}
+                    </span>
+                    <span className="font-mono text-xs text-ink-3 shrink-0">
+                      {ev.depth_start_m}
+                      {ev.depth_end_m ? `–${ev.depth_end_m}` : ''} m
+                    </span>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="bg-slate-800/80 px-5 py-3 border-t border-slate-700/80 flex justify-end">
-          <button
-            onClick={onClose}
-            className="bg-slate-700 hover:bg-slate-600 text-slate-100 px-4 py-1.5 rounded font-semibold transition-colors"
-          >
-            Close
-          </button>
+                  <p className="text-xs text-ink-2 mt-1 leading-relaxed">
+                    {ev.description ||
+                      `Encountered ${String(ev.event_type ?? 'event')
+                        .replace(/_/g, ' ')
+                        .toLowerCase()} in the ${ev.formation || 'Barail'} formation.`}
+                  </p>
+                  {ev.mitigation && (
+                    <p className="text-label text-ink-3 mt-2 flex items-center gap-1.5">
+                      <span className="text-ok-ink font-medium">Cured by:</span> {ev.mitigation}
+                    </p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
-    </div>
+    </dialog>
   );
 }

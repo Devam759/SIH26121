@@ -1,96 +1,137 @@
 'use client';
 
-import { Layers, AlertTriangle } from 'lucide-react';
-
-interface FormationInterval {
-  name: string;
-  topM: number;
-  bottomM: number;
-  lithology: string;
-  hazardRisk: 'LOW' | 'MEDIUM' | 'HIGH';
-  color: string;
-}
-
-const ASSAM_STRATA: FormationInterval[] = [
-  { name: 'Alluvium', topM: 0, bottomM: 450, lithology: 'Silt, unconsolidated gravel & coarse sand', hazardRisk: 'LOW', color: 'border-l-amber-700/60 bg-amber-950/20' },
-  { name: 'Dhekiajuli', topM: 450, bottomM: 1200, lithology: 'Friable massive sandstones with clay intercalations', hazardRisk: 'LOW', color: 'border-l-yellow-600/60 bg-yellow-950/20' },
-  { name: 'Tipam Sandstone', topM: 1200, bottomM: 2100, lithology: 'Massive fluvial sandstones, principal regional reservoir', hazardRisk: 'LOW', color: 'border-l-amber-500/60 bg-amber-900/20' },
-  { name: 'Surma / Bokabil', topM: 2100, bottomM: 2600, lithology: 'Siltstone, shale & argillaceous sandstone alternations', hazardRisk: 'MEDIUM', color: 'border-l-orange-500/70 bg-orange-950/25' },
-  { name: 'Barail Formation', topM: 2600, bottomM: 3200, lithology: 'Carbonaceous shale, coals, overpressured sands (Prone to Kicks & Losses)', hazardRisk: 'HIGH', color: 'border-l-[#ED1C24] bg-[#3A0B10]/40' },
-  { name: 'Kopili Formation', topM: 3200, bottomM: 3800, lithology: 'Splintery marine shales, limestone lenses', hazardRisk: 'MEDIUM', color: 'border-l-purple-500/60 bg-purple-950/20' },
-];
+import { ASSAM_STRATA, TOTAL_DEPTH, formationAt } from '../../lib/strata';
+import { OFFSET_EVENTS } from '../../lib/simulation';
 
 interface LithologyColumnProps {
   currentDepth: number;
 }
 
+/** Offset incidents per interval — the reason a stratum is worth flagging. */
+const INCIDENTS_BY_INTERVAL = ASSAM_STRATA.map(
+  (s) => OFFSET_EVENTS.filter((e) => e.depth_m >= s.topM && e.depth_m < s.bottomM).length
+);
+
 export default function LithologyColumn({ currentDepth }: LithologyColumnProps) {
-  // Find current active formation
-  const activeStratum = ASSAM_STRATA.find(
-    (s) => currentDepth >= s.topM && currentDepth < s.bottomM
-  ) || ASSAM_STRATA[ASSAM_STRATA.length - 1];
+  const active = formationAt(currentDepth);
+  const bitPct = Math.min(100, Math.max(0, (currentDepth / TOTAL_DEPTH) * 100));
 
   return (
-    <div className="bg-[#161B22]/95 border border-[#2E3642] rounded-lg p-3 shadow-md flex flex-col gap-2.5">
-      <div className="flex items-center justify-between pb-2 border-b border-[#2E3642]">
-        <div className="flex items-center gap-2">
-          <Layers className="w-4 h-4 text-amber-400" />
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-200">
-            Assam Basin Stratigraphy
-          </span>
+    <section className="panel flex flex-col h-full overflow-hidden">
+      <div className="panel-head px-4 py-2">
+        <div className="min-w-0">
+          <h2 className="panel-title">Stratigraphy profile</h2>
+          <p className="meta truncate">
+            Assam Basin &middot; scaled to {TOTAL_DEPTH.toLocaleString('en-IN')} m
+          </p>
         </div>
-        <span className="text-[11px] font-mono text-[#ED1C24] bg-[#3A0B10] px-2 py-0.5 rounded border border-[#8E1218] font-bold">
-          Bit Depth: {currentDepth.toFixed(1)}m MD
+        <span className="font-mono text-label tnum text-ink shrink-0">
+          bit {currentDepth.toFixed(1)} m
         </span>
       </div>
 
-      {/* Stratigraphic Stack */}
-      <div className="flex flex-col gap-1.5">
-        {ASSAM_STRATA.map((st) => {
-          const isCurrent = activeStratum.name === st.name;
-          const isHazard = st.hazardRisk === 'HIGH';
-
-          return (
-            <div
-              key={st.name}
-              className={`border-l-4 rounded p-2 text-xs transition-all relative ${st.color} ${
-                isCurrent ? 'ring-1 ring-[#ED1C24] shadow-sm' : 'opacity-85'
-              }`}
+      <div className="flex-1 flex min-h-0 p-3 gap-2">
+        {/* Depth scale down the left edge — the column is a section, so it
+            needs an axis to be read against. */}
+        <div className="relative w-9 shrink-0 text-right" aria-hidden="true">
+          {ASSAM_STRATA.map((s) => (
+            <span
+              key={s.name}
+              className="absolute right-0 -translate-y-1/2 text-micro font-mono tnum text-ink-3 pr-1"
+              style={{ top: `${(s.topM / TOTAL_DEPTH) * 100}%` }}
             >
-              {/* Bit Depth Marker indicator when in this formation */}
-              {isCurrent && (
-                <div className="absolute -left-2 top-1/2 -translate-y-1/2 flex items-center gap-1 z-10">
-                  <div className="w-2.5 h-2.5 bg-[#ED1C24] rounded-full animate-ping" />
-                </div>
-              )}
+              {s.topM}
+            </span>
+          ))}
+          <span
+            className="absolute right-0 -translate-y-1/2 text-micro font-mono tnum text-ink-3 pr-1"
+            style={{ top: '100%' }}
+          >
+            {TOTAL_DEPTH}
+          </span>
+        </div>
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5 font-bold text-slate-100">
-                  <span>{st.name}</span>
-                  {isCurrent && (
-                    <span className="text-[10px] font-mono px-1.5 py-0.2 bg-[#ED1C24] text-white rounded font-bold">
-                      DRILLING HERE
-                    </span>
-                  )}
-                  {isHazard && (
-                    <span className="text-[10px] font-semibold px-1.5 py-0.2 bg-[#3A0B10] text-red-300 border border-[#ED1C24] rounded flex items-center gap-0.5">
-                      <AlertTriangle className="w-2.5 h-2.5 text-[#ED1C24]" />
-                      HAZARD
-                    </span>
-                  )}
-                </div>
-                <span className="text-[10px] font-mono text-slate-400">
-                  {st.topM}m – {st.bottomM}m
-                </span>
-              </div>
+        <div className="relative flex-1 flex flex-col min-h-[300px] border border-line-soft bg-bg-deep">
+          {ASSAM_STRATA.map((s, i) => {
+            const isActive = active.name === s.name;
+            const incidents = INCIDENTS_BY_INTERVAL[i];
+            // The left edge carries hazard rating; the fill stays neutral so
+            // the column reads as rock, not as a status board.
+            const edge =
+              s.hazardRisk === 'HIGH'
+                ? 'border-l-brand'
+                : s.hazardRisk === 'MEDIUM'
+                  ? 'border-l-warn'
+                  : 'border-l-line';
 
-              <div className="text-[10px] text-slate-400 mt-1 leading-snug">
-                {st.lithology}
+            return (
+              <div
+                key={s.name}
+                style={{ flexGrow: s.bottomM - s.topM, flexBasis: 0 }}
+                className={`relative px-2.5 py-1.5 min-h-0 overflow-hidden border-l-2 ${edge} ${
+                  i > 0 ? 'border-t border-t-line-soft' : ''
+                } ${isActive ? 'bg-surface' : ''}`}
+              >
+                <div className="flex items-baseline justify-between gap-2">
+                  <h3
+                    className={`text-label truncate ${
+                      isActive ? 'text-ink font-semibold' : 'text-ink-2'
+                    }`}
+                  >
+                    {s.name}
+                  </h3>
+                  <span className="font-mono tnum text-micro text-ink-3 shrink-0">
+                    {s.bottomM - s.topM} m
+                  </span>
+                </div>
+                <p className="text-micro text-ink-3 mt-0.5 leading-snug line-clamp-1">
+                  {s.lithology}
+                </p>
+                {incidents > 0 && (
+                  <p
+                    className={`text-micro mt-0.5 font-mono ${
+                      s.hazardRisk === 'HIGH' ? 'text-brand-ink' : 'text-warn-ink'
+                    }`}
+                  >
+                    {incidents} offset {incidents === 1 ? 'incident' : 'incidents'}
+                  </p>
+                )}
               </div>
+            );
+          })}
+
+          {/* Bit depth tracker — a survey line across the section. */}
+          <div
+            className="absolute inset-x-0 pointer-events-none transition-[top] duration-300"
+            style={{ top: `${bitPct}%` }}
+          >
+            <div className="relative h-px bg-accent">
+              <span
+                className="absolute -top-[3px] left-0 w-1.5 h-1.5 bg-accent"
+                aria-hidden="true"
+              />
+              <span className="absolute -top-2 right-1 px-1 bg-accent text-bg-deep font-mono text-micro font-bold tnum">
+                {currentDepth.toFixed(1)} m
+              </span>
             </div>
-          );
-        })}
+          </div>
+        </div>
       </div>
-    </div>
+
+      <div className="px-4 py-2 border-t border-line-soft flex flex-wrap items-center gap-x-4 gap-y-1 text-micro text-ink-3">
+        <span className="flex items-center gap-1.5">
+          <span className="w-0.5 h-3 bg-brand" aria-hidden="true" />
+          High hazard
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="w-0.5 h-3 bg-warn" aria-hidden="true" />
+          Medium
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="w-3 h-px bg-accent" aria-hidden="true" />
+          Bit depth
+        </span>
+      </div>
+    </section>
   );
 }

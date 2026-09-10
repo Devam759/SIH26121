@@ -42,8 +42,8 @@ export interface EvidenceItem {
   depth_m: number;
   formation?: string;
   severity: string;
-  description?: string;
-  mitigation?: string;
+  description?: string | null;
+  mitigation?: string | null;
 }
 
 export interface RiskAssessment {
