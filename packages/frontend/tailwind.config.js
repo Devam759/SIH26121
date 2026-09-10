@@ -81,8 +81,8 @@ module.exports = {
       },
       zIndex: {
         sticky: '20',
-        overlay: '40',
-        modal: '50',
+        overlay: '9990',
+        modal: '9999',
       },
     },
     // Radius is deliberately capped. Rounded-lg through rounded-3xl all resolve

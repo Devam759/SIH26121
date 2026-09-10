@@ -12,9 +12,10 @@ interface AlertFeedProps {
   onInspectWell?: (wellName: string) => void;
 }
 
-function relativeTime(iso: string): string {
+function relativeTime(iso?: string): string {
+  if (!iso) return 'just now';
   const seconds = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
-  if (seconds < 60) return 'just now';
+  if (isNaN(seconds) || seconds < 60) return 'just now';
   const minutes = Math.round(seconds / 60);
   if (minutes < 60) return `${minutes}m ago`;
   return `${Math.round(minutes / 60)}h ago`;
@@ -90,7 +91,7 @@ export default function AlertFeed({
           <ul>
             {shown.map((alert) => {
               const sev = severityOf(alert);
-              const top = alert.evidence[0];
+              const top = alert.evidence?.[0];
               return (
                 <li
                   key={alert.id}
@@ -120,9 +121,10 @@ export default function AlertFeed({
                       {alert.message}
                     </span>
                     <span className="block text-micro text-ink-3 truncate font-mono">
-                      score {alert.score} &middot; {alert.evidenceWellCount} offset{' '}
-                      {alert.evidenceWellCount === 1 ? 'well' : 'wells'} &middot;{' '}
-                      {relativeTime(alert.timestamp)}
+                      score {alert.score} &middot;{' '}
+                      {alert.evidenceWellCount ?? alert.evidence?.length ?? 0} offset{' '}
+                      {(alert.evidenceWellCount ?? alert.evidence?.length ?? 0) === 1 ? 'well' : 'wells'} &middot;{' '}
+                      {relativeTime(alert.timestamp || alert.created_at)}
                       {alert.acknowledged && ' · acknowledged'}
                     </span>
                   </button>

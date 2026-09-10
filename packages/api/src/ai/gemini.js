@@ -10,8 +10,10 @@ export function getGeminiAI() {
   }
   if (!genAI) {
     genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
-    chatModel = genAI.getGenerativeModel({ model: 'gemini-3.6-flash' });
-    embedModel = genAI.getGenerativeModel({ model: 'gemini-embedding-001' });
+    const modelName = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+    const embedName = process.env.GEMINI_EMBED_MODEL || 'text-embedding-004';
+    chatModel = genAI.getGenerativeModel({ model: modelName });
+    embedModel = genAI.getGenerativeModel({ model: embedName });
   }
   return { genAI, chatModel, embedModel };
 }

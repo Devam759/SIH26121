@@ -120,7 +120,7 @@ export default function WellMap({ wells, activeWell, radiusKm, onSelectWell }: W
   }, [wells, activeWell, radiusKm]);
 
   return (
-    <div className="relative w-full h-full min-h-[320px] overflow-hidden border border-line-soft">
+    <div className="relative isolate z-0 w-full h-full min-h-[320px] overflow-hidden border border-line-soft">
       <div ref={mapContainerRef} className="w-full h-full" />
 
       {/* Legend, docked to the frame rather than floating over it. */}

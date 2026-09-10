@@ -2,53 +2,21 @@
 
 import { useState, useEffect } from 'react';
 import { fetchEvents, updateEventStatus } from '../../lib/api';
-import { localEvents } from '../../lib/simulation';
 import DocumentUploader from './DocumentUploader';
-import { CheckCircle2, Clock, AlertTriangle } from 'lucide-react';
-
-type Filter = 'ALL' | 'EXTRACTED' | 'APPROVED';
-
-const FILTERS: { key: Filter; label: string }[] = [
-  { key: 'EXTRACTED', label: 'Pending review' },
-  { key: 'APPROVED', label: 'Approved' },
-  { key: 'ALL', label: 'All records' },
-];
-
-const COLUMNS = [
-  'Offset well',
-  'Event',
-  'Interval',
-  'Formation',
-  'Severity',
-  'Mitigation',
-  'Status',
-  '',
-];
+import { Check, Clock, AlertCircle, FileSpreadsheet, ShieldCheck, CheckCheck } from 'lucide-react';
 
 export default function ReviewTable() {
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [offline, setOffline] = useState(false);
-  const [filter, setFilter] = useState<Filter>('EXTRACTED');
-
-  const status = filter === 'ALL' ? undefined : filter;
+  const [filter, setFilter] = useState<'ALL' | 'EXTRACTED' | 'APPROVED'>('EXTRACTED');
 
   const loadEvents = async () => {
     setLoading(true);
     try {
-      const rows = await fetchEvents(status);
-      // fetchEvents swallows a non-OK response and returns [], so an empty
-      // result is ambiguous — probe once to tell "no records" from "no API".
-      if (rows.length === 0) throw new Error('empty');
-      setEvents(rows);
-      setOffline(false);
-      setError(null);
-    } catch {
-      // Fall back to the bundled corpus so the queue is reviewable offline.
-      setEvents(localEvents(status));
-      setOffline(true);
-      setError(null);
+      const data = await fetchEvents(filter === 'ALL' ? undefined : filter);
+      setEvents(data);
+    } catch (err) {
+      console.error('Failed to load events:', err);
     } finally {
       setLoading(false);
     }
@@ -59,159 +27,157 @@ export default function ReviewTable() {
   }, [filter]);
 
   const handleApprove = async (id: string) => {
-    // Reflect the approval immediately; the queue is a review surface and must
-    // stay usable whether or not the write reaches the API.
-    setEvents((prev) => prev.map((e) => (e.id === id ? { ...e, review_status: 'APPROVED' } : e)));
-    setError(null);
-    if (offline) return;
     try {
-      await updateEventStatus(id, 'APPROVED');
-    } catch {
-      setError('Approved locally — the API did not accept the write, so it will not persist.');
+      const token = typeof window !== 'undefined' ? localStorage.getItem('nwis_token') || undefined : undefined;
+      await updateEventStatus(id, 'APPROVED', token);
+      setEvents((prev: any[]) =>
+        prev.map((e: any) => (e.id === id ? { ...e, review_status: 'APPROVED' } : e))
+      );
+    } catch (err) {
+      alert('Failed to approve event: ' + err);
     }
   };
 
+  const pendingCount = events.filter((e) => e.review_status === 'EXTRACTED').length;
+  const approvedCount = events.filter((e) => e.review_status === 'APPROVED').length;
+
   return (
-    <div className="flex flex-col gap-5">
-      <DocumentUploader onUploadSuccess={loadEvents} />
+    <div className="flex flex-col gap-4">
+      {/* 1. Document Ingestion & AI Extraction Panel */}
+      <DocumentUploader onUploadSuccess={() => loadEvents()} />
 
-      <section className="panel overflow-hidden">
-        <header className="panel-head px-4 py-2.5 flex-wrap">
-          <div>
-            <h2 className="panel-title">Validation Queue</h2>
-            <p className="meta mt-0.5">
-              Extracted offset events await human validation before factoring into real-time hazard
-              scores.
-              {offline && (
-                <span className="text-warn-ink">
-                  {' '}
-                  Showing the bundled corpus &mdash; approvals stay in this browser session.
-                </span>
-              )}
-            </p>
+      {/* 2. Steward Review Table */}
+      <div className="bg-slate-900/90 border border-slate-700/60 rounded-lg p-4 flex flex-col gap-3 shadow-md">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
+          <div className="flex items-center gap-2">
+            <FileSpreadsheet className="w-4 h-4 text-sky-400" />
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-200">
+              Data Steward Validation Queue (Human-in-the-Loop)
+            </span>
           </div>
 
-          <div className="seg" role="group" aria-label="Review status">
-            {FILTERS.map((f) => (
-              <button
-                key={f.key}
-                type="button"
-                onClick={() => setFilter(f.key)}
-                aria-pressed={filter === f.key}
-              >
-                {f.label}
-              </button>
-            ))}
+          {/* Filter Chips */}
+          <div className="flex items-center gap-1.5 text-xs">
+            <button
+              onClick={() => setFilter('EXTRACTED')}
+              className={`px-3 py-1 rounded text-xs font-semibold transition-colors flex items-center gap-1.5 ${
+                filter === 'EXTRACTED'
+                  ? 'bg-amber-600 text-white'
+                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+              }`}
+            >
+              <Clock className="w-3.5 h-3.5" />
+              <span>Pending Review</span>
+            </button>
+            <button
+              onClick={() => setFilter('APPROVED')}
+              className={`px-3 py-1 rounded text-xs font-semibold transition-colors flex items-center gap-1.5 ${
+                filter === 'APPROVED'
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+              }`}
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Approved Events</span>
+            </button>
+            <button
+              onClick={() => setFilter('ALL')}
+              className={`px-3 py-1 rounded text-xs font-semibold transition-colors ${
+                filter === 'ALL'
+                  ? 'bg-sky-600 text-white'
+                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+              }`}
+            >
+              All Records
+            </button>
           </div>
-        </header>
+        </div>
 
-        {error && (
-          <p className="px-4 py-2 text-body text-brand-ink bg-brand-wash border-b border-brand-line">
-            {error}
-          </p>
-        )}
-
-        <div className="overflow-x-auto max-h-[30rem]">
-          <table className="w-full text-left text-body min-w-[54rem]">
-            <thead className="sticky top-0 z-10 bg-raised border-b border-line">
-              <tr className="text-ink-3">
-                {COLUMNS.map((c, i) => (
-                  <th
-                    key={c || i}
-                    className={`hdr py-2 px-4 whitespace-nowrap ${
-                      i === COLUMNS.length - 1 ? 'text-right' : ''
-                    }`}
-                  >
-                    {c}
-                  </th>
-                ))}
+        {/* Table View */}
+        <div className="overflow-x-auto max-h-96">
+          <table className="w-full text-left text-xs text-slate-300">
+            <thead className="bg-slate-800/80 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-700/70 sticky top-0 z-10 backdrop-blur-sm">
+              <tr>
+                <th className="py-2.5 px-3">Offset Well</th>
+                <th className="py-2.5 px-3">Encountered Event</th>
+                <th className="py-2.5 px-3">Interval Depth</th>
+                <th className="py-2.5 px-3">Formation</th>
+                <th className="py-2.5 px-3">Severity</th>
+                <th className="py-2.5 px-3">Curing Mitigation</th>
+                <th className="py-2.5 px-3">Review Status</th>
+                <th className="py-2.5 px-3 text-right">Steward Action</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-800">
               {loading ? (
-                [0, 1, 2, 3].map((i) => (
-                  <tr key={i}>
-                    <td colSpan={COLUMNS.length} className="px-4 py-2">
-                      <div className="h-7 bg-surface/50" />
-                    </td>
-                  </tr>
-                ))
+                <tr>
+                  <td colSpan={8} className="text-center py-8 text-slate-500">
+                    Loading historical events...
+                  </td>
+                </tr>
               ) : events.length === 0 ? (
                 <tr>
-                  <td colSpan={COLUMNS.length} className="px-4 py-10 text-center">
-                    <p className="text-xs text-ink-3 max-w-[50ch] mx-auto">
-                      No records in this category. Upload a well completion report above to populate the queue.
-                    </p>
+                  <td colSpan={8} className="text-center py-8 text-slate-500">
+                    No records found in this view.
                   </td>
                 </tr>
               ) : (
-                events.map((ev) => (
-                  <tr
-                    key={ev.id}
-                    className="border-b border-line-soft last:border-b-0 hover:bg-surface/40 transition-colors"
-                  >
-                    <td className="py-2 px-4 font-semibold text-ink whitespace-nowrap">
-                      {ev.well_name}
+                events.map((ev: any) => (
+                  <tr key={ev.id} className="hover:bg-slate-800/40 transition-colors">
+                    <td className="py-2.5 px-3 font-semibold text-slate-200">{ev.well_name}</td>
+                    <td className="py-2.5 px-3 text-amber-300 font-mono uppercase">
+                      {ev.event_type.replaceAll('_', ' ')}
                     </td>
-                    <td className="py-2 px-4 text-ink-2 whitespace-nowrap">
-                      {ev.event_type.replace(/_/g, ' ')}
+                    <td className="py-2.5 px-3 font-mono text-slate-300">
+                      {ev.depth_start_m}m {ev.depth_end_m ? `– ${ev.depth_end_m}m` : ''}
                     </td>
-                    <td className="py-2 px-4 font-mono text-ink-3 whitespace-nowrap">
-                      {ev.depth_start_m}
-                      {ev.depth_end_m ? `–${ev.depth_end_m}` : ''} m
-                    </td>
-                    <td className="py-2 px-4 text-ink-2 whitespace-nowrap">
-                      {ev.formation || 'Barail'}
-                    </td>
-                    <td className="py-2 px-4 whitespace-nowrap">
+                    <td className="py-2.5 px-3">{ev.formation || 'Barail'}</td>
+                    <td className="py-2.5 px-3">
                       <span
-                        className={`tag ${
+                        className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${
                           ev.severity === 'HIGH'
-                            ? 'bg-brand-wash text-brand-ink border border-brand-line'
+                            ? 'bg-red-950 text-red-300 border border-red-800'
                             : ev.severity === 'MEDIUM'
-                              ? 'bg-warn-wash text-warn-ink border border-warn-line'
-                              : 'bg-ok-wash text-ok-ink border border-ok-line'
+                            ? 'bg-amber-950 text-amber-300 border border-amber-800'
+                            : 'bg-emerald-950 text-emerald-300 border border-emerald-800'
                         }`}
                       >
                         {ev.severity}
                       </span>
                     </td>
-                    <td
-                      className="py-2 px-4 text-ink-3 max-w-[16rem] truncate"
-                      title={ev.mitigation}
-                    >
+                    <td className="py-2.5 px-3 max-w-[220px] truncate text-slate-400" title={ev.mitigation}>
                       {ev.mitigation || 'Circulated heavier mud'}
                     </td>
-                    <td className="py-2 px-4 whitespace-nowrap">
+                    <td className="py-2.5 px-3">
                       <span
-                        className={`text-xs font-semibold flex items-center gap-1.5 ${
-                          ev.review_status === 'APPROVED' ? 'text-ok-ink' : 'text-warn-ink'
+                        className={`inline-flex items-center gap-1 text-[11px] font-medium ${
+                          ev.review_status === 'APPROVED'
+                            ? 'text-emerald-400'
+                            : 'text-amber-400'
                         }`}
                       >
                         {ev.review_status === 'APPROVED' ? (
-                          <>
-                            <CheckCircle2 className="w-3.5 h-3.5" />
-                            Approved
-                          </>
+                          <Check className="w-3.5 h-3.5" />
                         ) : (
-                          <>
-                            <Clock className="w-3.5 h-3.5" />
-                            Pending
-                          </>
+                          <Clock className="w-3.5 h-3.5" />
                         )}
+                        {ev.review_status}
                       </span>
                     </td>
-                    <td className="py-2 px-4 text-right whitespace-nowrap">
+                    <td className="py-2.5 px-3 text-right">
                       {ev.review_status !== 'APPROVED' ? (
                         <button
-                          type="button"
                           onClick={() => handleApprove(ev.id)}
-                          className="btn"
+                          className="bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded text-[10px] font-bold transition-colors inline-flex items-center gap-1 shadow-sm"
                         >
-                          Approve
+                          <Check className="w-3 h-3" />
+                          <span>Approve</span>
                         </button>
                       ) : (
-                        <span className="text-label text-ink-3">Validated</span>
+                        <span className="text-emerald-400/80 font-mono text-[10px] flex items-center justify-end gap-1">
+                          <CheckCheck className="w-3.5 h-3.5" />
+                          <span>Validated</span>
+                        </span>
                       )}
                     </td>
                   </tr>
@@ -220,7 +186,7 @@ export default function ReviewTable() {
             </tbody>
           </table>
         </div>
-      </section>
+      </div>
     </div>
   );
 }

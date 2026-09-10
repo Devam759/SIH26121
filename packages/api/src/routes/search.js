@@ -48,10 +48,13 @@ router.get('/', async (req, res, next) => {
     }
 
     if (lat && lon && radius_km) {
+      const lonIdx = idx++;
+      const latIdx = idx++;
+      const radIdx = idx++;
       conditions.push(`ST_DWithin(
         w.location,
-        ST_SetSRID(ST_MakePoint($${idx++}, $${idx++}), 4326)::geography,
-        $${idx++} * 1000
+        ST_SetSRID(ST_MakePoint($${lonIdx}, $${latIdx}), 4326)::geography,
+        $${radIdx} * 1000
       )`);
       params.push(parseFloat(lon), parseFloat(lat), parseFloat(radius_km));
     }

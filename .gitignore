@@ -41,3 +41,5 @@ __pycache__/
 venv/
 ENV/
 synthetic_reports/*.pdf
+# Presentations & PPT deliverables
+ppt/

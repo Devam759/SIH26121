@@ -6,7 +6,7 @@ import { Play, Pause, RotateCcw, ArrowUp, ArrowDown, FileText } from 'lucide-rea
 
 interface ERTMACTelemetryStripProps {
   telemetry: DrillingTelemetry | null;
-  history: TelemetrySample[];
+  history?: TelemetrySample[];
   currentDepth: number;
   isSimulating: boolean;
   onOpenHazardBrief?: () => void;
@@ -140,7 +140,7 @@ function Channel({
 
 export default function ERTMACTelemetryStrip({
   telemetry,
-  history,
+  history = [],
   currentDepth,
   isSimulating,
   onOpenHazardBrief,
